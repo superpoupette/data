@@ -209,6 +209,8 @@ document.getElementById("closeModal").onclick = () => {
    REFRESH BUTTON
 ========================= */
 document.getElementById("refresh").onclick = () => {
+  localStorage.removeItem("events");
+  eventsData = [];
   updateCalendar();
 };
 
