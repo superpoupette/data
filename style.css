@@ -1,7 +1,7 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background-color: #121212;
+  background: #121212;
   color: #e0e0e0;
 }
 
@@ -11,17 +11,41 @@ body {
   height: 100vh;
 }
 
+/* NAV */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px;
+  background: #1e1e1e;
+  border-bottom: 1px solid #333;
+}
+
+.nav button {
+  background: #2a2a2a;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#weekLabel {
+  font-weight: bold;
+}
+
 /* HEADER */
 .header {
   display: grid;
   grid-template-columns: 80px repeat(7, 1fr);
-  background-color: #1e1e1e;
+  background: #1e1e1e;
   border-bottom: 1px solid #333;
 }
 
 .header div {
-  padding: 10px;
   text-align: center;
+  padding: 8px;
   font-weight: bold;
 }
 
@@ -34,80 +58,49 @@ body {
 .grid {
   display: grid;
   grid-template-columns: 80px repeat(7, 1fr);
-  overflow-y: auto;
   flex-grow: 1;
+  overflow-y: hidden; /* plus de scroll */
 }
 
 /* HEURES */
 .hour {
+  height: 32px;
+  font-size: 11px;
+  color: #aaa;
+  padding: 2px 4px;
+
+  /* bordures propres */
   border-right: 1px solid #333;
   border-bottom: 1px solid #333;
-  padding: 5px;
-  font-size: 12px;
-  color: #aaa;
 }
 
 /* CELLULES */
 .cell {
-  border: 1px solid #333;
-  height: 60px;
-  transition: background 0.2s;
-}
+  height: 32px;
+  position: relative;
 
-.cell:hover {
-  background-color: #2a2a2a;
-}
-/* NAVIGATION */
-.nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  padding: 10px;
-  background-color: #1e1e1e;
+  /* bordures propres (évite double ligne) */
+  border-right: 1px solid #333;
   border-bottom: 1px solid #333;
 }
 
-.nav button {
-  background-color: #2a2a2a;
-  border: none;
-  color: #e0e0e0;
-  padding: 8px 12px;
-  cursor: pointer;
-  border-radius: 6px;
-  font-size: 16px;
-}
-
-.nav button:hover {
-  background-color: #3a3a3a;
-}
-
-#weekLabel {
-  font-weight: bold;
-}
-
-.cell {
-  border: 1px solid #333;
-  height: 60px;
-  position: relative;
-}
-
-/* EVENEMENTS */
+/* EVENTS */
 .event {
   position: absolute;
   left: 2px;
   right: 2px;
   border-radius: 6px;
+  font-size: 11px;
   padding: 2px 4px;
-  font-size: 12px;
   overflow: hidden;
+  color: white;
 }
 
-/* Couleurs par type */
+/* TYPES */
 .sport {
-  background-color: #2e7d32;
+  background: #2e7d32;
 }
 
 .evenement {
-  background-color: #6a1b9a;
+  background: #6a1b9a;
 }
