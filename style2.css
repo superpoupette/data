@@ -97,10 +97,8 @@ body {
 }
 
 /* TYPES */
-.sport {
-  background: red !important;
-}
+.sport { 
+  background: #98E87D; }
 
-.evenement {
-  background: blue !important;
-}
+.evenement { 
+  background: #B888DB; }
