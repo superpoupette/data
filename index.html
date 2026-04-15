@@ -181,6 +181,11 @@ function updateCalendar() {
       cell.className = "cell";
       grid.appendChild(cell);
     }
+    // scroll automatique sur midi
+setTimeout(() => {
+  const hourHeight = 32;
+  grid.scrollTop = hourHeight * 12;
+}, 0);
   }
 
   loadEvents(monday);
