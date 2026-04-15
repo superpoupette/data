@@ -45,7 +45,7 @@
     <label>Date</label>
     <input id="eventDate" type="date">
 
-    <label>Heure</label>
+    <label>Heure (ex: 14.5)</label>
     <input id="eventHour" type="number" step="0.25">
 
     <label>Durée (minutes)</label>
@@ -89,12 +89,13 @@ function updateCalendar() {
   const monday = new Date(currentDate);
   monday.setDate(currentDate.getDate() + diff);
   monday.setHours(0,0,0,0);
+
   mondayGlobal = monday;
 
   const options = { day: "numeric", month: "short" };
   const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
-  const headerDays = document.querySelectorAll(".header div:not(:first-child)");
+  const headerDays = document.querySelectorAll(".header div");
 
   headerDays.forEach((el, i) => {
     const d = new Date(monday);
@@ -119,8 +120,6 @@ function updateCalendar() {
     for (let d = 0; d < 7; d++) {
       const cell = document.createElement("div");
       cell.className = "cell";
-      cell.dataset.hour = h;
-      cell.dataset.day = d;
       grid.appendChild(cell);
     }
   }
@@ -133,17 +132,32 @@ function updateCalendar() {
 }
 
 /* =========================
-   LOAD EVENTS (TIMESTAMP VERSION)
+   LOAD EVENTS (ROBUSTE)
 ========================= */
 function loadEvents() {
 
-  const events = eventsData;
-
   const pxPerMinute = 32 / 60;
 
-  events.forEach(ev => {
+  eventsData.forEach(ev => {
 
-    const start = new Date(ev.start);
+    let start, end;
+
+    // 🟢 FORMAT TIMESTAMP (nouveau)
+    if (ev.start && ev.end) {
+      start = new Date(ev.start);
+      end = new Date(ev.end);
+    }
+
+    // 🟡 FORMAT ANCIEN (compatibilité)
+    else if (ev.date && ev.heure != null) {
+      start = new Date(ev.date);
+      start.setHours(Math.floor(ev.heure));
+      start.setMinutes((ev.heure % 1) * 60);
+
+      end = new Date(start.getTime() + (ev.duree || 60) * 60000);
+    }
+
+    else return;
 
     const diffDays = Math.floor(
       (start - mondayGlobal) / (1000 * 60 * 60 * 24)
@@ -163,7 +177,7 @@ function loadEvents() {
     div.className = `event ${ev.type}`;
 
     div.style.top = (minutes * pxPerMinute) + "px";
-    div.style.height = ((ev.end - ev.start) / 60000) * pxPerMinute + "px";
+    div.style.height = ((end - start) / 60000) * pxPerMinute + "px";
 
     div.textContent = ev.nom;
 
@@ -213,11 +227,12 @@ document.getElementById("saveEvent").onclick = () => {
   const duration = parseInt(document.getElementById("eventDuration").value);
   const type = document.getElementById("eventType").value;
 
+  if (!name || !date || isNaN(hour) || isNaN(duration)) return;
+
   const start = new Date(date);
   start.setHours(Math.floor(hour));
   start.setMinutes((hour % 1) * 60);
   start.setSeconds(0);
-  start.setMilliseconds(0);
 
   const end = new Date(start.getTime() + duration * 60000);
 
