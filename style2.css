@@ -142,3 +142,20 @@ body {
   justify-content: space-between;
   margin-top: 10px;
 }
+.event {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.resize-handle {
+  height: 6px;
+  background: rgba(0,0,0,0.2);
+  cursor: ns-resize;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
