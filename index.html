@@ -77,9 +77,6 @@ const modal = document.getElementById("modal");
 
 let mondayGlobal = null;
 
-const SLOT_HEIGHT = 32; // 15 min = 32px
-const STEP = 15;
-
 function updateCalendar() {
 
   grid.innerHTML = "";
@@ -92,16 +89,13 @@ function updateCalendar() {
   mondayGlobal = monday;
 
   const options = { day: "numeric", month: "short" };
-
   const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
-  // HEADER
   const headerDays = document.querySelectorAll(".header div:not(:first-child)");
 
   headerDays.forEach((el, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
-
     el.innerHTML = `${names[i]}<br><span>${d.toLocaleDateString("fr-FR", options)}</span>`;
   });
 
@@ -111,20 +105,23 @@ function updateCalendar() {
   weekLabel.textContent =
     `${monday.toLocaleDateString("fr-FR", options)} - ${sunday.toLocaleDateString("fr-FR", options)}`;
 
-  // GRID (15 min slots)
+  // GRID (1 heure = 1 ligne)
   for (let h = 0; h < 24; h++) {
-    for (let m = 0; m < 60; m += STEP) {
 
-      for (let d = 0; d < 7; d++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
+    const hourCell = document.createElement("div");
+    hourCell.className = "hour";
+    hourCell.textContent = `${h.toString().padStart(2,"0")}:00`;
+    grid.appendChild(hourCell);
 
-        cell.dataset.hour = h;
-        cell.dataset.minute = m;
-        cell.dataset.day = d;
+    for (let d = 0; d < 7; d++) {
 
-        grid.appendChild(cell);
-      }
+      const cell = document.createElement("div");
+      cell.className = "cell";
+
+      cell.dataset.hour = h;
+      cell.dataset.day = d;
+
+      grid.appendChild(cell);
     }
   }
 
@@ -150,22 +147,20 @@ async function loadEvents(monday) {
     if (diffDays < 0 || diffDays > 6) return;
 
     const hour = Math.floor(ev.heure);
-    const minutes = (ev.heure % 1) * 60;
+    const minutes = (ev.heure - hour) * 60;
 
-    const cell = [...grid.children].find(c =>
-      parseInt(c.dataset.day) === diffDays &&
-      parseInt(c.dataset.hour) === hour &&
-      parseInt(c.dataset.minute) === Math.floor(minutes / 15) * 15
-    );
+    const cellIndex = hour * 8 + (diffDays + 1);
+    const cell = grid.children[cellIndex];
 
     if (!cell) return;
 
     const div = document.createElement("div");
     div.className = `event ${ev.type}`;
 
-    const top = (minutes % 60) * (SLOT_HEIGHT / 15);
-    div.style.top = top + "px";
-    div.style.height = (ev.duree / 15) * SLOT_HEIGHT + "px";
+    const pxPerMinute = 32 / 60;
+
+    div.style.top = (minutes * pxPerMinute) + "px";
+    div.style.height = (ev.duree * pxPerMinute) + "px";
 
     div.innerHTML = `
       <div class="event-content">${ev.nom}</div>
@@ -187,13 +182,20 @@ document.getElementById("next").onclick = () => {
   updateCalendar();
 };
 
-/* CLICK PRECIS */
+/* CLICK PRECISE (IMPORTANT FIX) */
 grid.addEventListener("click", (e) => {
+
   const cell = e.target.closest(".cell");
   if (!cell) return;
 
+  const rect = cell.getBoundingClientRect();
+  const clickY = e.clientY - rect.top;
+
+  const ratio = clickY / rect.height;
+
   const hour = parseInt(cell.dataset.hour);
-  const minute = parseInt(cell.dataset.minute);
+  const minute = Math.round(ratio * 60);
+
   const day = parseInt(cell.dataset.day);
 
   const date = new Date(mondayGlobal);
@@ -227,7 +229,7 @@ document.getElementById("saveEvent").onclick = () => {
   updateCalendar();
 };
 
-/* RESIZE EVENTS */
+/* RESIZE */
 let resizing = null;
 
 document.addEventListener("mousedown", (e) => {
@@ -250,15 +252,20 @@ document.addEventListener("mousemove", (e) => {
 });
 
 document.addEventListener("mouseup", () => {
+
+  if (!resizing) return;
+
+  const pxPerMinute = 32 / 60;
+  const newDuration = Math.round(resizing.el.offsetHeight / pxPerMinute);
+
+  resizing.el.dataset.duration = newDuration;
+
   resizing = null;
 });
 
 updateCalendar();
 
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
