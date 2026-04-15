@@ -98,9 +98,9 @@ body {
 
 /* TYPES */
 .sport {
-  background: #98E87D;
+  background: red !important;
 }
 
 .evenement {
-  background: #B888DB;
+  background: blue !important;
 }
