@@ -7,33 +7,30 @@
 </head>
 
 <body>
+
 <header class="top-nav">
   <a href="index.html">Calendrier</a>
   <a href="data.html">Data</a>
   <a href="graphiques.html">Graphiques</a>
 </header>
+
 <div class="calendar">
 
-  <!-- NAV -->
   <div class="nav">
     <button id="prev">←</button>
-
     <div id="weekLabel"></div>
-
     <button id="next">→</button>
 
     <button id="openModal">+ Créer</button>
     <button id="refresh">↻ Refresh</button>
   </div>
 
-  <!-- HEADER (⚠️ colonne vide HEURE obligatoire) -->
   <div class="header">
     <div class="hour-header"></div>
     <div></div><div></div><div></div><div></div>
     <div></div><div></div><div></div>
   </div>
 
-  <!-- GRID -->
   <div class="grid"></div>
 
 </div>
@@ -84,6 +81,9 @@ const modal = document.getElementById("modal");
 
 let mondayGlobal = null;
 
+/* ⭐ NOUVEAU : mode édition */
+let editingEventId = null;
+
 /* =========================
    CALENDAR
 ========================= */
@@ -103,7 +103,6 @@ function updateCalendar() {
   const options = { day: "numeric", month: "short" };
   const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
-  // HEADER avec colonne HEURE + 7 jours
   const headerDays = document.querySelectorAll(".header div");
 
   headerDays.forEach((el, i) => {
@@ -125,7 +124,6 @@ function updateCalendar() {
   weekLabel.textContent =
     `${monday.toLocaleDateString("fr-FR", options)} - ${sunday.toLocaleDateString("fr-FR", options)}`;
 
-  // GRID (colonne 1 = heures)
   for (let h = 0; h < 24; h++) {
 
     const hourCell = document.createElement("div");
@@ -148,7 +146,7 @@ function updateCalendar() {
 }
 
 /* =========================
-   LOAD EVENTS (TIMESTAMP)
+   LOAD EVENTS + CLICK EDIT
 ========================= */
 function loadEvents() {
 
@@ -181,6 +179,29 @@ function loadEvents() {
 
     div.textContent = ev.nom;
 
+    /* ⭐ CLICK POUR EDITER */
+    div.onclick = () => {
+
+      editingEventId = ev.id;
+
+      document.getElementById("eventName").value = ev.nom;
+
+      const s = new Date(ev.start);
+      const e = new Date(ev.end);
+
+      document.getElementById("eventStartDate").value = s.toISOString().split("T")[0];
+      document.getElementById("eventStartHour").value =
+        s.getHours() + s.getMinutes() / 60;
+
+      document.getElementById("eventEndDate").value = e.toISOString().split("T")[0];
+      document.getElementById("eventEndHour").value =
+        e.getHours() + e.getMinutes() / 60;
+
+      document.getElementById("eventType").value = ev.type;
+
+      modal.classList.remove("hidden");
+    };
+
     cell.appendChild(div);
   });
 }
@@ -202,6 +223,15 @@ document.getElementById("next").onclick = () => {
    MODAL
 ========================= */
 document.getElementById("openModal").onclick = () => {
+
+  editingEventId = null;
+
+  document.getElementById("eventName").value = "";
+  document.getElementById("eventStartDate").value = "";
+  document.getElementById("eventStartHour").value = "";
+  document.getElementById("eventEndDate").value = "";
+  document.getElementById("eventEndHour").value = "";
+
   modal.classList.remove("hidden");
 };
 
@@ -217,7 +247,7 @@ document.getElementById("refresh").onclick = () => {
 };
 
 /* =========================
-   SAVE EVENT (AUTO END)
+   SAVE EVENT (CREATE + EDIT)
 ========================= */
 document.getElementById("saveEvent").onclick = () => {
 
@@ -231,17 +261,12 @@ document.getElementById("saveEvent").onclick = () => {
 
   const type = document.getElementById("eventType").value;
 
-  if (!name || !startDate || isNaN(startHour)) {
-    alert("Champs obligatoires manquants");
-    return;
-  }
+  if (!name || !startDate || isNaN(startHour)) return;
 
-  // START
   const start = new Date(startDate);
   start.setHours(Math.floor(startHour));
   start.setMinutes((startHour % 1) * 60);
 
-  // AUTO END
   if (!endDate) endDate = startDate;
   if (isNaN(endHour)) endHour = startHour + 1;
 
@@ -249,15 +274,33 @@ document.getElementById("saveEvent").onclick = () => {
   end.setHours(Math.floor(endHour));
   end.setMinutes((endHour % 1) * 60);
 
-  const newEvent = {
-    id: crypto.randomUUID(),
-    nom: name,
-    start: start.getTime(),
-    end: end.getTime(),
-    type
-  };
+  if (editingEventId) {
 
-  eventsData.push(newEvent);
+    const index = eventsData.findIndex(e => e.id === editingEventId);
+
+    if (index !== -1) {
+      eventsData[index] = {
+        ...eventsData[index],
+        nom: name,
+        start: start.getTime(),
+        end: end.getTime(),
+        type
+      };
+    }
+
+    editingEventId = null;
+
+  } else {
+
+    eventsData.push({
+      id: crypto.randomUUID(),
+      nom: name,
+      start: start.getTime(),
+      end: end.getTime(),
+      type
+    });
+  }
+
   localStorage.setItem("events", JSON.stringify(eventsData));
 
   modal.classList.add("hidden");
