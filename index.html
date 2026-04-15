@@ -2,14 +2,114 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Calendrier Semaine</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Calendrier</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #e0e0e0;
+    }
+
+    .calendar {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* NAV */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 10px;
+      background: #1e1e1e;
+      border-bottom: 1px solid #333;
+    }
+
+    .nav button {
+      background: #2a2a2a;
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #weekLabel {
+      font-weight: bold;
+    }
+
+    /* HEADER */
+    .header {
+      display: grid;
+      grid-template-columns: 80px repeat(7, 1fr);
+      background: #1e1e1e;
+      border-bottom: 1px solid #333;
+    }
+
+    .header div {
+      text-align: center;
+      padding: 10px;
+      font-weight: bold;
+    }
+
+    .header span {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    /* GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: 80px repeat(7, 1fr);
+      overflow-y: auto;
+      flex-grow: 1;
+      position: relative;
+    }
+
+    .hour {
+      border: 1px solid #333;
+      font-size: 12px;
+      color: #aaa;
+      padding: 4px;
+      height: 60px;
+    }
+
+    .cell {
+      border: 1px solid #333;
+      height: 60px;
+      position: relative;
+    }
+
+    /* EVENTS */
+    .event {
+      position: absolute;
+      left: 2px;
+      right: 2px;
+      border-radius: 6px;
+      font-size: 12px;
+      padding: 2px;
+      overflow: hidden;
+      color: white;
+    }
+
+    .sport {
+      background: #2e7d32;
+    }
+
+    .evenement {
+      background: #6a1b9a;
+    }
+  </style>
 </head>
+
 <body>
 
 <div class="calendar">
 
-  <!-- NAVIGATION -->
+  <!-- NAV -->
   <div class="nav">
     <button id="prev">←</button>
     <div id="weekLabel"></div>
@@ -34,90 +134,102 @@
 </div>
 
 <script>
-  let currentDate = new Date();
+let currentDate = new Date();
 
-  const headerDays = document.querySelectorAll(".header div:not(:first-child)");
-  const weekLabel = document.getElementById("weekLabel");
+const headerDays = document.querySelectorAll(".header div:not(:first-child)");
+const grid = document.querySelector(".grid");
+const weekLabel = document.getElementById("weekLabel");
 
-  function updateCalendar() {
-    const day = currentDate.getDay();
-    const diff = (day === 0 ? -6 : 1) - day;
+function updateCalendar() {
 
-    const monday = new Date(currentDate);
-    monday.setDate(currentDate.getDate() + diff);
+  // reset grid
+  grid.innerHTML = "";
 
-    const options = { day: "numeric", month: "short" };
+  // header dates
+  const day = currentDate.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
 
-    headerDays.forEach((el, index) => {
-      const date = new Date(monday);
-      date.setDate(monday.getDate() + index);
+  const monday = new Date(currentDate);
+  monday.setDate(currentDate.getDate() + diff);
 
-      const dayName = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"][index];
+  const options = { day: "numeric", month: "short" };
 
-      el.innerHTML = `${dayName}<br><span>${date.toLocaleDateString("fr-FR", options)}</span>`;
-    });
+  headerDays.forEach((el, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
 
-    // Label semaine (ex: 15 avr - 21 avr)
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
+    const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
-    weekLabel.textContent =
-      `${monday.toLocaleDateString("fr-FR", options)} - ${sunday.toLocaleDateString("fr-FR", options)}`;
-  }
-
-  // Navigation
-  document.getElementById("prev").addEventListener("click", () => {
-    currentDate.setDate(currentDate.getDate() - 7);
-    updateCalendar();
+    el.innerHTML = `${names[i]}<br><span>${d.toLocaleDateString("fr-FR", options)}</span>`;
   });
 
-  document.getElementById("next").addEventListener("click", () => {
-    currentDate.setDate(currentDate.getDate() + 7);
-    updateCalendar();
-  });
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
 
-  // GRID HEURES
-  const grid = document.querySelector(".grid");
+  weekLabel.textContent =
+    `${monday.toLocaleDateString("fr-FR", options)} - ${sunday.toLocaleDateString("fr-FR", options)}`;
 
-  for (let hour = 0; hour < 24; hour++) {
+  // GRID HOURS
+  for (let h = 0; h < 24; h++) {
     const hourCell = document.createElement("div");
-    hourCell.classList.add("hour");
-    hourCell.textContent = `${hour.toString().padStart(2, "0")}:00`;
+    hourCell.className = "hour";
+    hourCell.textContent = `${h.toString().padStart(2,"0")}:00`;
     grid.appendChild(hourCell);
 
-    for (let day = 0; day < 7; day++) {
+    for (let d = 0; d < 7; d++) {
       const cell = document.createElement("div");
-      cell.classList.add("cell");
+      cell.className = "cell";
       grid.appendChild(cell);
     }
   }
 
-  // Auto scroll
-  window.addEventListener("load", () => {
-    const hourHeight = 60;
-    grid.scrollTop = hourHeight * 8;
-  });
-  <script>
-async function loadEvents() {
-  const response = await fetch("data.json");
-  const events = await response.json();
+  loadEvents(monday);
+}
 
-  events.forEach(event => {
-    const eventDate = new Date(event.date);
+async function loadEvents(monday) {
 
-    addEventToGrid(
-      eventDate,
-      event.heure,
-      event.duree,
-      event.type.toLowerCase()
-    );
+  const res = await fetch("data.json");
+  const events = await res.json();
+
+  events.forEach(ev => {
+
+    const eventDate = new Date(ev.date);
+
+    const diffDays = Math.floor((eventDate - monday) / (1000*60*60*24));
+    if (diffDays < 0 || diffDays > 6) return;
+
+    const hour = Math.floor(ev.heure);
+    const minutes = (ev.heure % 1) * 60;
+
+    const cellIndex = hour * 8 + (diffDays + 1);
+    const cell = grid.children[cellIndex];
+
+    if (!cell) return;
+
+    const div = document.createElement("div");
+    div.className = `event ${ev.type}`;
+
+    div.style.top = (minutes / 60 * 60) + "px";
+    div.style.height = (ev.duree / 60 * 60) + "px";
+
+    div.textContent = ev.type;
+
+    cell.appendChild(div);
   });
 }
 
-loadEvents();
-</script>
-
+// navigation
+document.getElementById("prev").onclick = () => {
+  currentDate.setDate(currentDate.getDate() - 7);
   updateCalendar();
+};
+
+document.getElementById("next").onclick = () => {
+  currentDate.setDate(currentDate.getDate() + 7);
+  updateCalendar();
+};
+
+updateCalendar();
 </script>
 
 </body>
