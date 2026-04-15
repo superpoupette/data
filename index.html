@@ -34,24 +34,61 @@
 
 </div>
 
+<!-- MODAL -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+
+    <h3>Créer un événement</h3>
+
+    <label>Nom</label>
+    <input id="eventName" type="text">
+
+    <label>Date</label>
+    <input id="eventDate" type="date">
+
+    <label>Heure (ex: 14.5)</label>
+    <input id="eventHour" type="number" step="0.5">
+
+    <label>Durée (minutes)</label>
+    <input id="eventDuration" type="number">
+
+    <label>Type</label>
+    <select id="eventType">
+      <option value="sport">Sport</option>
+      <option value="evenement">Evenement</option>
+    </select>
+
+    <div class="modal-actions">
+      <button id="closeModal">Annuler</button>
+      <button id="saveEvent">Créer</button>
+    </div>
+
+  </div>
+</div>
+
 <script>
+
 let currentDate = new Date();
+let eventsData = JSON.parse(localStorage.getItem("events") || "[]");
 
 const headerDays = document.querySelectorAll(".header div:not(:first-child)");
 const grid = document.querySelector(".grid");
 const weekLabel = document.getElementById("weekLabel");
 
+const modal = document.getElementById("modal");
+
+let mondayGlobal = null;
+
 function updateCalendar() {
 
-  // reset grid
   grid.innerHTML = "";
 
-  // header dates
   const day = currentDate.getDay();
   const diff = (day === 0 ? -6 : 1) - day;
 
   const monday = new Date(currentDate);
   monday.setDate(currentDate.getDate() + diff);
+  mondayGlobal = monday;
 
   const options = { day: "numeric", month: "short" };
 
@@ -70,8 +107,9 @@ function updateCalendar() {
   weekLabel.textContent =
     `${monday.toLocaleDateString("fr-FR", options)} - ${sunday.toLocaleDateString("fr-FR", options)}`;
 
-  // GRID HOURS
+  // GRID
   for (let h = 0; h < 24; h++) {
+
     const hourCell = document.createElement("div");
     hourCell.className = "hour";
     hourCell.textContent = `${h.toString().padStart(2,"0")}:00`;
@@ -82,12 +120,12 @@ function updateCalendar() {
       cell.className = "cell";
       grid.appendChild(cell);
     }
-    // scroll automatique sur midi
-setTimeout(() => {
-  const hourHeight = 32;
-  grid.scrollTop = hourHeight * 12;
-}, 0);
   }
+
+  // scroll midi (UNE SEULE FOIS)
+  requestAnimationFrame(() => {
+    grid.scrollTop = 32 * 12;
+  });
 
   loadEvents(monday);
 }
@@ -95,7 +133,9 @@ setTimeout(() => {
 async function loadEvents(monday) {
 
   const res = await fetch("data.json");
-  const events = await res.json();
+  const fileEvents = await res.json();
+
+  const events = [...fileEvents, ...eventsData];
 
   events.forEach(ev => {
 
@@ -115,8 +155,8 @@ async function loadEvents(monday) {
     const div = document.createElement("div");
     div.className = `event ${ev.type}`;
 
-    div.style.top = (minutes / 60 * 60) + "px";
-    div.style.height = (ev.duree / 60 * 60) + "px";
+    div.style.top = (minutes / 60 * 32) + "px";
+    div.style.height = (ev.duree / 60 * 32) + "px";
 
     div.textContent = ev.nom;
 
@@ -124,7 +164,7 @@ async function loadEvents(monday) {
   });
 }
 
-// navigation
+/* NAV */
 document.getElementById("prev").onclick = () => {
   currentDate.setDate(currentDate.getDate() - 7);
   updateCalendar();
@@ -135,7 +175,40 @@ document.getElementById("next").onclick = () => {
   updateCalendar();
 };
 
+/* CLICK GRID → OPEN MODAL */
+grid.addEventListener("click", (e) => {
+  if (e.target.classList.contains("cell")) {
+    modal.classList.remove("hidden");
+  }
+});
+
+/* CLOSE MODAL */
+document.getElementById("closeModal").onclick = () => {
+  modal.classList.add("hidden");
+};
+
+/* SAVE EVENT */
+document.getElementById("saveEvent").onclick = () => {
+
+  const newEvent = {
+    nom: document.getElementById("eventName").value,
+    date: document.getElementById("eventDate").value,
+    heure: parseFloat(document.getElementById("eventHour").value),
+    duree: parseInt(document.getElementById("eventDuration").value),
+    type: document.getElementById("eventType").value
+  };
+
+  eventsData.push(newEvent);
+
+  localStorage.setItem("events", JSON.stringify(eventsData));
+
+  modal.classList.add("hidden");
+
+  updateCalendar();
+};
+
 updateCalendar();
+
 </script>
 
 </body>
