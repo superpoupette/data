@@ -23,16 +23,10 @@
   </div>
 
   <!-- HEADER -->
-<div class="header">
-  <div class="hour-header"></div> <!-- IMPORTANT -->
-  <div></div>
-  <div></div>
-  <div></div>
-  <div></div>
-  <div></div>
-  <div></div>
-  <div></div>
-</div>
+  <div class="header">
+    <div></div><div></div><div></div><div></div>
+    <div></div><div></div><div></div><div></div>
+  </div>
 
   <!-- GRID -->
   <div class="grid"></div>
@@ -48,14 +42,17 @@
     <label>Nom</label>
     <input id="eventName" type="text">
 
-    <label>Date</label>
-    <input id="eventDate" type="date">
+    <label>Date début</label>
+    <input id="eventStartDate" type="date">
 
-    <label>Heure (ex: 14.5)</label>
-    <input id="eventHour" type="number" step="0.25">
+    <label>Heure début</label>
+    <input id="eventStartHour" type="number" step="0.25">
 
-    <label>Durée (minutes)</label>
-    <input id="eventDuration" type="number">
+    <label>Date fin (optionnel)</label>
+    <input id="eventEndDate" type="date">
+
+    <label>Heure fin (optionnel)</label>
+    <input id="eventEndHour" type="number" step="0.25">
 
     <label>Type</label>
     <select id="eventType">
@@ -101,7 +98,7 @@ function updateCalendar() {
   const options = { day: "numeric", month: "short" };
   const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
-  const headerDays = document.querySelectorAll(".header div:not(.hour-header)");
+  const headerDays = document.querySelectorAll(".header div");
 
   headerDays.forEach((el, i) => {
     const d = new Date(monday);
@@ -138,7 +135,7 @@ function updateCalendar() {
 }
 
 /* =========================
-   LOAD EVENTS (ROBUSTE)
+   LOAD EVENTS (TIMESTAMP)
 ========================= */
 function loadEvents() {
 
@@ -146,24 +143,8 @@ function loadEvents() {
 
   eventsData.forEach(ev => {
 
-    let start, end;
-
-    // 🟢 FORMAT TIMESTAMP (nouveau)
-    if (ev.start && ev.end) {
-      start = new Date(ev.start);
-      end = new Date(ev.end);
-    }
-
-    // 🟡 FORMAT ANCIEN (compatibilité)
-    else if (ev.date && ev.heure != null) {
-      start = new Date(ev.date);
-      start.setHours(Math.floor(ev.heure));
-      start.setMinutes((ev.heure % 1) * 60);
-
-      end = new Date(start.getTime() + (ev.duree || 60) * 60000);
-    }
-
-    else return;
+    let start = new Date(ev.start);
+    let end = new Date(ev.end);
 
     const diffDays = Math.floor(
       (start - mondayGlobal) / (1000 * 60 * 60 * 24)
@@ -223,24 +204,41 @@ document.getElementById("refresh").onclick = () => {
 };
 
 /* =========================
-   SAVE EVENT (TIMESTAMP)
+   SAVE EVENT (AUTO END DATE)
 ========================= */
 document.getElementById("saveEvent").onclick = () => {
 
   const name = document.getElementById("eventName").value;
-  const date = document.getElementById("eventDate").value;
-  const hour = parseFloat(document.getElementById("eventHour").value);
-  const duration = parseInt(document.getElementById("eventDuration").value);
+
+  const startDate = document.getElementById("eventStartDate").value;
+  const startHour = parseFloat(document.getElementById("eventStartHour").value);
+
+  let endDate = document.getElementById("eventEndDate").value;
+  let endHour = parseFloat(document.getElementById("eventEndHour").value);
+
   const type = document.getElementById("eventType").value;
 
-  if (!name || !date || isNaN(hour) || isNaN(duration)) return;
+  if (!name || !startDate || isNaN(startHour)) {
+    alert("Champs obligatoires manquants");
+    return;
+  }
 
-  const start = new Date(date);
-  start.setHours(Math.floor(hour));
-  start.setMinutes((hour % 1) * 60);
+  // 🟢 START
+  const start = new Date(startDate);
+  start.setHours(Math.floor(startHour));
+  start.setMinutes((startHour % 1) * 60);
   start.setSeconds(0);
+  start.setMilliseconds(0);
 
-  const end = new Date(start.getTime() + duration * 60000);
+  // 🟡 AUTO END = START si vide
+  if (!endDate) endDate = startDate;
+  if (isNaN(endHour)) endHour = startHour + 1; // défaut 1h
+
+  const end = new Date(endDate);
+  end.setHours(Math.floor(endHour));
+  end.setMinutes((endHour % 1) * 60);
+  end.setSeconds(0);
+  end.setMilliseconds(0);
 
   const newEvent = {
     id: crypto.randomUUID(),
