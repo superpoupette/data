@@ -13,8 +13,13 @@
   <!-- NAV -->
   <div class="nav">
     <button id="prev">←</button>
+
     <div id="weekLabel"></div>
+
     <button id="next">→</button>
+
+    <!-- ✅ NOUVEAU BOUTON -->
+    <button id="openModal">+ Créer</button>
   </div>
 
   <!-- HEADER -->
@@ -79,6 +84,9 @@ const modal = document.getElementById("modal");
 
 let mondayGlobal = null;
 
+/* =========================
+   CALENDAR
+========================= */
 function updateCalendar() {
 
   grid.innerHTML = "";
@@ -92,11 +100,11 @@ function updateCalendar() {
 
   const options = { day: "numeric", month: "short" };
 
+  const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+
   headerDays.forEach((el, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
-
-    const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
     el.innerHTML = `${names[i]}<br><span>${d.toLocaleDateString("fr-FR", options)}</span>`;
   });
@@ -122,7 +130,6 @@ function updateCalendar() {
     }
   }
 
-  // scroll midi (UNE SEULE FOIS)
   requestAnimationFrame(() => {
     grid.scrollTop = 32 * 12;
   });
@@ -130,6 +137,9 @@ function updateCalendar() {
   loadEvents(monday);
 }
 
+/* =========================
+   LOAD EVENTS
+========================= */
 async function loadEvents(monday) {
 
   const res = await fetch("data.json");
@@ -164,7 +174,9 @@ async function loadEvents(monday) {
   });
 }
 
-/* NAV */
+/* =========================
+   NAV
+========================= */
 document.getElementById("prev").onclick = () => {
   currentDate.setDate(currentDate.getDate() - 7);
   updateCalendar();
@@ -175,19 +187,22 @@ document.getElementById("next").onclick = () => {
   updateCalendar();
 };
 
-/* CLICK GRID → OPEN MODAL */
-grid.addEventListener("click", (e) => {
-  if (e.target.classList.contains("cell")) {
-    modal.classList.remove("hidden");
-  }
-});
+/* =========================
+   MODAL OPEN / CLOSE
+========================= */
 
-/* CLOSE MODAL */
+// ✅ bouton nouveau
+document.getElementById("openModal").onclick = () => {
+  modal.classList.remove("hidden");
+};
+
 document.getElementById("closeModal").onclick = () => {
   modal.classList.add("hidden");
 };
 
-/* SAVE EVENT */
+/* =========================
+   SAVE EVENT
+========================= */
 document.getElementById("saveEvent").onclick = () => {
 
   const newEvent = {
@@ -199,17 +214,18 @@ document.getElementById("saveEvent").onclick = () => {
   };
 
   eventsData.push(newEvent);
-
   localStorage.setItem("events", JSON.stringify(eventsData));
 
   modal.classList.add("hidden");
-
   updateCalendar();
 };
 
 updateCalendar();
 
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
