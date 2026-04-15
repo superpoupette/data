@@ -85,3 +85,29 @@ body {
 #weekLabel {
   font-weight: bold;
 }
+
+.cell {
+  border: 1px solid #333;
+  height: 60px;
+  position: relative;
+}
+
+/* EVENEMENTS */
+.event {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-radius: 6px;
+  padding: 2px 4px;
+  font-size: 12px;
+  overflow: hidden;
+}
+
+/* Couleurs par type */
+.sport {
+  background-color: #2e7d32;
+}
+
+.evenement {
+  background-color: #6a1b9a;
+}
