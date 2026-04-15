@@ -77,6 +77,22 @@ const modal = document.getElementById("modal");
 
 let mondayGlobal = null;
 
+/* =========================
+   SNAP 15 MINUTES
+========================= */
+function snapToQuarter(hour, minute) {
+  const snapped = Math.round(minute / 15) * 15;
+
+  if (snapped === 60) {
+    return { hour: hour + 1, minute: 0 };
+  }
+
+  return { hour, minute: snapped };
+}
+
+/* =========================
+   CALENDAR
+========================= */
 function updateCalendar() {
 
   grid.innerHTML = "";
@@ -105,7 +121,7 @@ function updateCalendar() {
   weekLabel.textContent =
     `${monday.toLocaleDateString("fr-FR", options)} - ${sunday.toLocaleDateString("fr-FR", options)}`;
 
-  // GRID (1 heure = 1 ligne)
+  // GRID
   for (let h = 0; h < 24; h++) {
 
     const hourCell = document.createElement("div");
@@ -132,6 +148,9 @@ function updateCalendar() {
   loadEvents(monday);
 }
 
+/* =========================
+   LOAD EVENTS
+========================= */
 async function loadEvents(monday) {
 
   const res = await fetch("data.json");
@@ -146,8 +165,13 @@ async function loadEvents(monday) {
 
     if (diffDays < 0 || diffDays > 6) return;
 
-    const hour = Math.floor(ev.heure);
-    const minutes = (ev.heure - hour) * 60;
+    const hourRaw = Math.floor(ev.heure);
+    const minuteRaw = Math.round((ev.heure - hourRaw) * 60);
+
+    const snapped = snapToQuarter(hourRaw, minuteRaw);
+
+    const hour = snapped.hour;
+    const minutes = snapped.minute;
 
     const cellIndex = hour * 8 + (diffDays + 1);
     const cell = grid.children[cellIndex];
@@ -171,7 +195,9 @@ async function loadEvents(monday) {
   });
 }
 
-/* NAV */
+/* =========================
+   NAV
+========================= */
 document.getElementById("prev").onclick = () => {
   currentDate.setDate(currentDate.getDate() - 7);
   updateCalendar();
@@ -182,32 +208,42 @@ document.getElementById("next").onclick = () => {
   updateCalendar();
 };
 
-/* CLICK PRECISE (IMPORTANT FIX) */
+/* =========================
+   CLICK (SNAP 15 MIN)
+========================= */
 grid.addEventListener("click", (e) => {
 
   const cell = e.target.closest(".cell");
   if (!cell) return;
 
   const rect = cell.getBoundingClientRect();
-  const clickY = e.clientY - rect.top;
-
-  const ratio = clickY / rect.height;
+  const ratio = (e.clientY - rect.top) / rect.height;
 
   const hour = parseInt(cell.dataset.hour);
-  const minute = Math.round(ratio * 60);
+  let minute = Math.round(ratio * 60);
+
+  const snapped = snapToQuarter(hour, minute);
+
+  const hourFinal = snapped.hour;
+  const minuteFinal = snapped.minute;
 
   const day = parseInt(cell.dataset.day);
 
   const date = new Date(mondayGlobal);
   date.setDate(date.getDate() + day);
 
-  document.getElementById("eventDate").value = date.toISOString().split("T")[0];
-  document.getElementById("eventHour").value = hour + minute / 60;
+  document.getElementById("eventDate").value =
+    date.toISOString().split("T")[0];
+
+  document.getElementById("eventHour").value =
+    hourFinal + minuteFinal / 60;
 
   modal.classList.remove("hidden");
 });
 
-/* MODAL */
+/* =========================
+   MODAL
+========================= */
 document.getElementById("closeModal").onclick = () => {
   modal.classList.add("hidden");
 };
@@ -229,7 +265,74 @@ document.getElementById("saveEvent").onclick = () => {
   updateCalendar();
 };
 
-/* RESIZE */
+/* =========================
+   DRAG & DROP + SNAP
+========================= */
+let dragging = null;
+
+document.addEventListener("mousedown", (e) => {
+
+  const eventEl = e.target.closest(".event");
+  if (!eventEl) return;
+
+  dragging = {
+    el: eventEl
+  };
+
+  eventEl.style.opacity = "0.7";
+  eventEl.style.pointerEvents = "none";
+});
+
+document.addEventListener("mouseup", (e) => {
+
+  if (!dragging) return;
+
+  const target = document.elementFromPoint(e.clientX, e.clientY);
+  const cell = target?.closest?.(".cell");
+
+  if (cell) {
+
+    const hour = parseInt(cell.dataset.hour);
+    const day = parseInt(cell.dataset.day);
+
+    const rect = cell.getBoundingClientRect();
+    let minute = Math.round(((e.clientY - rect.top) / rect.height) * 60);
+
+    const snapped = snapToQuarter(hour, minute);
+
+    const hourFinal = snapped.hour;
+    const minuteFinal = snapped.minute;
+
+    const index = eventsData.findIndex(ev =>
+      ev.nom === dragging.el.querySelector(".event-content")?.textContent
+    );
+
+    if (index !== -1) {
+      eventsData[index].heure = hourFinal + minuteFinal / 60;
+      eventsData[index].date = getDateFromDay(day);
+
+      localStorage.setItem("events", JSON.stringify(eventsData));
+    }
+
+    updateCalendar();
+  }
+
+  dragging.el.style.opacity = "1";
+  dragging.el.style.pointerEvents = "auto";
+
+  dragging = null;
+});
+
+/* helper */
+function getDateFromDay(dayIndex) {
+  const date = new Date(mondayGlobal);
+  date.setDate(date.getDate() + dayIndex);
+  return date.toISOString().split("T")[0];
+}
+
+/* =========================
+   RESIZE
+========================= */
 let resizing = null;
 
 document.addEventListener("mousedown", (e) => {
