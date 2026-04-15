@@ -47,7 +47,7 @@
     <input id="eventDate" type="date">
 
     <label>Heure (ex: 14.5)</label>
-    <input id="eventHour" type="number" step="0.5">
+    <input id="eventHour" type="number" step="0.25">
 
     <label>Durée (minutes)</label>
     <input id="eventDuration" type="number">
@@ -71,13 +71,14 @@
 let currentDate = new Date();
 let eventsData = JSON.parse(localStorage.getItem("events") || "[]");
 
-const headerDays = document.querySelectorAll(".header div:not(:first-child)");
 const grid = document.querySelector(".grid");
 const weekLabel = document.getElementById("weekLabel");
-
 const modal = document.getElementById("modal");
 
 let mondayGlobal = null;
+
+const SLOT_HEIGHT = 32; // 15 min = 32px
+const STEP = 15;
 
 function updateCalendar() {
 
@@ -92,11 +93,14 @@ function updateCalendar() {
 
   const options = { day: "numeric", month: "short" };
 
+  const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+
+  // HEADER
+  const headerDays = document.querySelectorAll(".header div:not(:first-child)");
+
   headerDays.forEach((el, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
-
-    const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
     el.innerHTML = `${names[i]}<br><span>${d.toLocaleDateString("fr-FR", options)}</span>`;
   });
@@ -107,22 +111,23 @@ function updateCalendar() {
   weekLabel.textContent =
     `${monday.toLocaleDateString("fr-FR", options)} - ${sunday.toLocaleDateString("fr-FR", options)}`;
 
-  // GRID
+  // GRID (15 min slots)
   for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += STEP) {
 
-    const hourCell = document.createElement("div");
-    hourCell.className = "hour";
-    hourCell.textContent = `${h.toString().padStart(2,"0")}:00`;
-    grid.appendChild(hourCell);
+      for (let d = 0; d < 7; d++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
 
-    for (let d = 0; d < 7; d++) {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      grid.appendChild(cell);
+        cell.dataset.hour = h;
+        cell.dataset.minute = m;
+        cell.dataset.day = d;
+
+        grid.appendChild(cell);
+      }
     }
   }
 
-  // scroll midi (UNE SEULE FOIS)
   requestAnimationFrame(() => {
     grid.scrollTop = 32 * 12;
   });
@@ -140,25 +145,32 @@ async function loadEvents(monday) {
   events.forEach(ev => {
 
     const eventDate = new Date(ev.date);
-
     const diffDays = Math.floor((eventDate - monday) / (1000*60*60*24));
+
     if (diffDays < 0 || diffDays > 6) return;
 
     const hour = Math.floor(ev.heure);
     const minutes = (ev.heure % 1) * 60;
 
-    const cellIndex = hour * 8 + (diffDays + 1);
-    const cell = grid.children[cellIndex];
+    const cell = [...grid.children].find(c =>
+      parseInt(c.dataset.day) === diffDays &&
+      parseInt(c.dataset.hour) === hour &&
+      parseInt(c.dataset.minute) === Math.floor(minutes / 15) * 15
+    );
 
     if (!cell) return;
 
     const div = document.createElement("div");
     div.className = `event ${ev.type}`;
 
-    div.style.top = (minutes / 60 * 32) + "px";
-    div.style.height = (ev.duree / 60 * 32) + "px";
+    const top = (minutes % 60) * (SLOT_HEIGHT / 15);
+    div.style.top = top + "px";
+    div.style.height = (ev.duree / 15) * SLOT_HEIGHT + "px";
 
-    div.textContent = ev.nom;
+    div.innerHTML = `
+      <div class="event-content">${ev.nom}</div>
+      <div class="resize-handle"></div>
+    `;
 
     cell.appendChild(div);
   });
@@ -175,19 +187,29 @@ document.getElementById("next").onclick = () => {
   updateCalendar();
 };
 
-/* CLICK GRID → OPEN MODAL */
+/* CLICK PRECIS */
 grid.addEventListener("click", (e) => {
-  if (e.target.classList.contains("cell")) {
-    modal.classList.remove("hidden");
-  }
+  const cell = e.target.closest(".cell");
+  if (!cell) return;
+
+  const hour = parseInt(cell.dataset.hour);
+  const minute = parseInt(cell.dataset.minute);
+  const day = parseInt(cell.dataset.day);
+
+  const date = new Date(mondayGlobal);
+  date.setDate(date.getDate() + day);
+
+  document.getElementById("eventDate").value = date.toISOString().split("T")[0];
+  document.getElementById("eventHour").value = hour + minute / 60;
+
+  modal.classList.remove("hidden");
 });
 
-/* CLOSE MODAL */
+/* MODAL */
 document.getElementById("closeModal").onclick = () => {
   modal.classList.add("hidden");
 };
 
-/* SAVE EVENT */
 document.getElementById("saveEvent").onclick = () => {
 
   const newEvent = {
@@ -199,17 +221,44 @@ document.getElementById("saveEvent").onclick = () => {
   };
 
   eventsData.push(newEvent);
-
   localStorage.setItem("events", JSON.stringify(eventsData));
 
   modal.classList.add("hidden");
-
   updateCalendar();
 };
+
+/* RESIZE EVENTS */
+let resizing = null;
+
+document.addEventListener("mousedown", (e) => {
+  if (!e.target.classList.contains("resize-handle")) return;
+
+  resizing = {
+    el: e.target.parentElement,
+    startY: e.clientY,
+    startHeight: e.target.parentElement.offsetHeight
+  };
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (!resizing) return;
+
+  const diff = e.clientY - resizing.startY;
+  const newHeight = Math.max(20, resizing.startHeight + diff);
+
+  resizing.el.style.height = newHeight + "px";
+});
+
+document.addEventListener("mouseup", () => {
+  resizing = null;
+});
 
 updateCalendar();
 
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
