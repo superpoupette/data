@@ -18,8 +18,11 @@
 
     <button id="next">→</button>
 
-    <!-- ✅ NOUVEAU BOUTON -->
+    <!-- bouton créer -->
     <button id="openModal">+ Créer</button>
+
+    <!-- bouton refresh -->
+    <button id="refresh">↻ Refresh</button>
   </div>
 
   <!-- HEADER -->
@@ -79,7 +82,6 @@ let eventsData = JSON.parse(localStorage.getItem("events") || "[]");
 const headerDays = document.querySelectorAll(".header div:not(:first-child)");
 const grid = document.querySelector(".grid");
 const weekLabel = document.getElementById("weekLabel");
-
 const modal = document.getElementById("modal");
 
 let mondayGlobal = null;
@@ -99,7 +101,6 @@ function updateCalendar() {
   mondayGlobal = monday;
 
   const options = { day: "numeric", month: "short" };
-
   const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
   headerDays.forEach((el, i) => {
@@ -138,7 +139,7 @@ function updateCalendar() {
 }
 
 /* =========================
-   LOAD EVENTS
+   LOAD EVENTS (FIX DATE BUG)
 ========================= */
 async function loadEvents(monday) {
 
@@ -149,9 +150,15 @@ async function loadEvents(monday) {
 
   events.forEach(ev => {
 
-    const eventDate = new Date(ev.date);
+    const eventDate = new Date(ev.date + "T00:00:00");
 
-    const diffDays = Math.floor((eventDate - monday) / (1000*60*60*24));
+    const mondayLocal = new Date(monday);
+    mondayLocal.setHours(0,0,0,0);
+
+    const diffDays = Math.round(
+      (eventDate.getTime() - mondayLocal.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
     if (diffDays < 0 || diffDays > 6) return;
 
     const hour = Math.floor(ev.heure);
@@ -188,10 +195,8 @@ document.getElementById("next").onclick = () => {
 };
 
 /* =========================
-   MODAL OPEN / CLOSE
+   MODAL OPEN/CLOSE
 ========================= */
-
-// ✅ bouton nouveau
 document.getElementById("openModal").onclick = () => {
   modal.classList.remove("hidden");
 };
@@ -201,13 +206,20 @@ document.getElementById("closeModal").onclick = () => {
 };
 
 /* =========================
+   REFRESH BUTTON
+========================= */
+document.getElementById("refresh").onclick = () => {
+  updateCalendar();
+};
+
+/* =========================
    SAVE EVENT
 ========================= */
 document.getElementById("saveEvent").onclick = () => {
 
   const newEvent = {
     nom: document.getElementById("eventName").value,
-    date: document.getElementById("eventDate").value,
+    date: document.getElementById("eventDate").value + "T00:00:00",
     heure: parseFloat(document.getElementById("eventHour").value),
     duree: parseInt(document.getElementById("eventDuration").value),
     type: document.getElementById("eventType").value
@@ -223,9 +235,6 @@ document.getElementById("saveEvent").onclick = () => {
 updateCalendar();
 
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
