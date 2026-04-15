@@ -91,9 +91,11 @@ body {
   right: 2px;
   border-radius: 6px;
   font-size: 11px;
-  padding: 2px 4px;
+  padding: 6px 8px; /* 👈 espace intérieur */
   overflow: hidden;
-  color: white;
+
+  color: #000; /* 👈 texte noir */
+  font-weight: 500;
 }
 
 /* TYPES */
