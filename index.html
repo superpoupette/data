@@ -23,10 +23,16 @@
   </div>
 
   <!-- HEADER -->
-  <div class="header">
-    <div></div><div></div><div></div><div></div>
-    <div></div><div></div><div></div><div></div>
-  </div>
+<div class="header">
+  <div class="hour-header"></div> <!-- IMPORTANT -->
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
 
   <!-- GRID -->
   <div class="grid"></div>
@@ -95,7 +101,7 @@ function updateCalendar() {
   const options = { day: "numeric", month: "short" };
   const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
-  const headerDays = document.querySelectorAll(".header div");
+  const headerDays = document.querySelectorAll(".header div:not(.hour-header)");
 
   headerDays.forEach((el, i) => {
     const d = new Date(monday);
