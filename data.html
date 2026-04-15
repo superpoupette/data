@@ -8,25 +8,25 @@
 
 <body>
 
-<!-- NAV -->
 <header class="top-nav">
-  <a href="index.html">📅 Calendrier</a>
-  <a href="data.html">📊 Data</a>
-  <a href="graphiques.html">📈 Graphiques</a>
+  <a href="index.html">Calendrier</a>
+  <a href="data.html">Data</a>
+  <a href="graphiques.html">Graphiques</a>
 </header>
 
-<h2 style="margin: 16px;">Liste des événements</h2>
+<h2 style="margin: 10px;">Liste des événements</h2>
 
 <table id="eventsTable">
   <thead>
     <tr>
-      <th>Date début</th>
-      <th>Heure début</th>
-      <th>Date fin</th>
-      <th>Heure fin</th>
-      <th>Durée (min)</th>
+      <th>Début</th>
+      <th>h</th>
+      <th>Fin</th>
+      <th>h</th>
+      <th>Min</th>
       <th>Nom</th>
       <th>Type</th>
+      <th>🗑</th>
     </tr>
   </thead>
 
@@ -35,7 +35,7 @@
 
 <script>
 
-const data = JSON.parse(localStorage.getItem("events") || "[]");
+let data = JSON.parse(localStorage.getItem("events") || "[]");
 
 const tbody = document.querySelector("#eventsTable tbody");
 
@@ -49,27 +49,40 @@ function formatHour(d) {
          date.getMinutes().toString().padStart(2, "0");
 }
 
-data.forEach(ev => {
+function renderTable() {
 
-  const start = new Date(ev.start);
-  const end = new Date(ev.end);
+  tbody.innerHTML = "";
 
-  const duration = Math.round((end - start) / 60000);
+  data.forEach((ev, index) => {
 
-  const row = document.createElement("tr");
+    const start = new Date(ev.start);
+    const end = new Date(ev.end);
+    const duration = Math.round((end - start) / 60000);
 
-  row.innerHTML = `
-    <td>${formatDate(start)}</td>
-    <td>${formatHour(start)}</td>
-    <td>${formatDate(end)}</td>
-    <td>${formatHour(end)}</td>
-    <td>${duration}</td>
-    <td>${ev.nom}</td>
-    <td>${ev.type}</td>
-  `;
+    const row = document.createElement("tr");
 
-  tbody.appendChild(row);
-});
+    row.innerHTML = `
+      <td>${formatDate(start)}</td>
+      <td>${formatHour(start)}</td>
+      <td>${formatDate(end)}</td>
+      <td>${formatHour(end)}</td>
+      <td>${duration}</td>
+      <td>${ev.nom}</td>
+      <td>${ev.type}</td>
+      <td><button class="deleteBtn">✖</button></td>
+    `;
+
+    row.querySelector(".deleteBtn").onclick = () => {
+      data.splice(index, 1);
+      localStorage.setItem("events", JSON.stringify(data));
+      renderTable();
+    };
+
+    tbody.appendChild(row);
+  });
+}
+
+renderTable();
 
 </script>
 
