@@ -162,17 +162,19 @@ body {
 
 .top-nav {
   display: flex;
-  gap: 20px;
-  padding: 12px 16px;
+  gap: 14px;
+  padding: 6px 12px; /* ↓ plus petit */
   background: #1e1e1e;
   border-bottom: 1px solid #333;
+  align-items: center;
 }
 
 .top-nav a {
   color: #e0e0e0;
   text-decoration: none;
-  font-weight: bold;
-  padding: 6px 10px;
+  font-weight: 500;   /* ↓ moins épais */
+  font-size: 13px;    /* ↓ texte plus petit */
+  padding: 4px 8px;   /* ↓ zones cliquables plus compactes */
   border-radius: 6px;
 }
 
