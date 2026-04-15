@@ -97,6 +97,25 @@
     const hourHeight = 60;
     grid.scrollTop = hourHeight * 8;
   });
+  <script>
+async function loadEvents() {
+  const response = await fetch("data.json");
+  const events = await response.json();
+
+  events.forEach(event => {
+    const eventDate = new Date(event.date);
+
+    addEventToGrid(
+      eventDate,
+      event.heure,
+      event.duree,
+      event.type.toLowerCase()
+    );
+  });
+}
+
+loadEvents();
+</script>
 
   updateCalendar();
 </script>
