@@ -3,12 +3,14 @@
     "date": "2026-04-15",
     "heure": 14.5,
     "duree": 60,
-    "type": "sport"
+    "type": "sport",
+    "nom": "Danse"
   },
   {
     "date": "2026-04-14",
     "heure": 13,
     "duree": 120,
-    "type": "evenement"
+    "type": "evenement",
+    "nom":"Brunch"
   }
 ]
