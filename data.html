@@ -8,11 +8,70 @@
 
 <body>
 
+<!-- NAV -->
 <header class="top-nav">
-  <a href="index.html">Calendrier</a>
-  <a href="data.html">Data</a>
-  <a href="graphiques.html">Graphiques</a>
+  <a href="index.html">📅 Calendrier</a>
+  <a href="data.html">📊 Data</a>
+  <a href="graphiques.html">📈 Graphiques</a>
 </header>
+
+<h2 style="margin: 16px;">Liste des événements</h2>
+
+<table id="eventsTable">
+  <thead>
+    <tr>
+      <th>Date début</th>
+      <th>Heure début</th>
+      <th>Date fin</th>
+      <th>Heure fin</th>
+      <th>Durée (min)</th>
+      <th>Nom</th>
+      <th>Type</th>
+    </tr>
+  </thead>
+
+  <tbody></tbody>
+</table>
+
+<script>
+
+const data = JSON.parse(localStorage.getItem("events") || "[]");
+
+const tbody = document.querySelector("#eventsTable tbody");
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString("fr-FR");
+}
+
+function formatHour(d) {
+  const date = new Date(d);
+  return date.getHours().toString().padStart(2, "0") + ":" +
+         date.getMinutes().toString().padStart(2, "0");
+}
+
+data.forEach(ev => {
+
+  const start = new Date(ev.start);
+  const end = new Date(ev.end);
+
+  const duration = Math.round((end - start) / 60000);
+
+  const row = document.createElement("tr");
+
+  row.innerHTML = `
+    <td>${formatDate(start)}</td>
+    <td>${formatHour(start)}</td>
+    <td>${formatDate(end)}</td>
+    <td>${formatHour(end)}</td>
+    <td>${duration}</td>
+    <td>${ev.nom}</td>
+    <td>${ev.type}</td>
+  `;
+
+  tbody.appendChild(row);
+});
+
+</script>
 
 </body>
 </html>
