@@ -6,43 +6,32 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="calendar">
-    <div class="header">
-    <div></div> <!-- case vide pour aligner avec les heures -->
-    <div>Lundi</div>
-    <div>Mardi</div>
-    <div>Mercredi</div>
-    <div>Jeudi</div>
-    <div>Vendredi</div>
-    <div>Samedi</div>
-    <div>Dimanche</div>
+
+<div class="calendar">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
   </div>
 
-    <div class="grid">
-      <!-- 24h * 7 jours -->
-      <!-- On va générer les cases à la main pour l'instant -->
-      <!-- 1 ligne = 1 heure -->
-      
-      <!-- Exemple ligne 8h -->
-      <div class="hour">08:00</div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
-      <div class="cell"></div>
+  <!-- GRID -->
+  <div class="grid"></div>
 
-      <!-- Tu peux dupliquer pour 09h, 10h, etc -->
-    </div>
-  </div>
-  <script>
+</div>
+
+<script>
+  // ====== HEADER DATES ======
   const headerDays = document.querySelectorAll(".header div:not(:first-child)");
-
   const today = new Date();
 
-  // Trouver lundi de la semaine
-  const day = today.getDay(); // 0 = dimanche
+  const day = today.getDay();
   const diff = (day === 0 ? -6 : 1) - day;
 
   const monday = new Date(today);
@@ -54,12 +43,33 @@
     const date = new Date(monday);
     date.setDate(monday.getDate() + index);
 
-    const dayName = [
-      "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"
-    ][index];
+    const dayName = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"][index];
 
     el.innerHTML = `${dayName}<br><span>${date.toLocaleDateString("fr-FR", options)}</span>`;
   });
+
+  // ====== GRID HEURES ======
+  const grid = document.querySelector(".grid");
+
+  for (let hour = 0; hour < 24; hour++) {
+    const hourCell = document.createElement("div");
+    hourCell.classList.add("hour");
+    hourCell.textContent = `${hour.toString().padStart(2, "0")}:00`;
+    grid.appendChild(hourCell);
+
+    for (let day = 0; day < 7; day++) {
+      const cell = document.createElement("div");
+      cell.classList.add("cell");
+      grid.appendChild(cell);
+    }
+  }
+
+  // ====== AUTO SCROLL ======
+  window.addEventListener("load", () => {
+    const hourHeight = 60;
+    grid.scrollTop = hourHeight * 8;
+  });
 </script>
+
 </body>
 </html>
