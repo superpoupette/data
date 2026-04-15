@@ -8,14 +8,15 @@
 <body>
   <div class="calendar">
     <div class="header">
-      <div>Lundi</div>
-      <div>Mardi</div>
-      <div>Mercredi</div>
-      <div>Jeudi</div>
-      <div>Vendredi</div>
-      <div>Samedi</div>
-      <div>Dimanche</div>
-    </div>
+    <div></div> <!-- case vide pour aligner avec les heures -->
+    <div>Lundi</div>
+    <div>Mardi</div>
+    <div>Mercredi</div>
+    <div>Jeudi</div>
+    <div>Vendredi</div>
+    <div>Samedi</div>
+    <div>Dimanche</div>
+  </div>
 
     <div class="grid">
       <!-- 24h * 7 jours -->
@@ -35,5 +36,30 @@
       <!-- Tu peux dupliquer pour 09h, 10h, etc -->
     </div>
   </div>
+  <script>
+  const headerDays = document.querySelectorAll(".header div:not(:first-child)");
+
+  const today = new Date();
+
+  // Trouver lundi de la semaine
+  const day = today.getDay(); // 0 = dimanche
+  const diff = (day === 0 ? -6 : 1) - day;
+
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diff);
+
+  const options = { day: "numeric", month: "short" };
+
+  headerDays.forEach((el, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+
+    const dayName = [
+      "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"
+    ][index];
+
+    el.innerHTML = `${dayName}<br><span>${date.toLocaleDateString("fr-FR", options)}</span>`;
+  });
+</script>
 </body>
 </html>
