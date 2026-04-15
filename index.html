@@ -9,6 +9,13 @@
 
 <div class="calendar">
 
+  <!-- NAVIGATION -->
+  <div class="nav">
+    <button id="prev">←</button>
+    <div id="weekLabel"></div>
+    <button id="next">→</button>
+  </div>
+
   <!-- HEADER -->
   <div class="header">
     <div></div>
@@ -27,28 +34,49 @@
 </div>
 
 <script>
-  // ====== HEADER DATES ======
+  let currentDate = new Date();
+
   const headerDays = document.querySelectorAll(".header div:not(:first-child)");
-  const today = new Date();
+  const weekLabel = document.getElementById("weekLabel");
 
-  const day = today.getDay();
-  const diff = (day === 0 ? -6 : 1) - day;
+  function updateCalendar() {
+    const day = currentDate.getDay();
+    const diff = (day === 0 ? -6 : 1) - day;
 
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + diff);
+    const monday = new Date(currentDate);
+    monday.setDate(currentDate.getDate() + diff);
 
-  const options = { day: "numeric", month: "short" };
+    const options = { day: "numeric", month: "short" };
 
-  headerDays.forEach((el, index) => {
-    const date = new Date(monday);
-    date.setDate(monday.getDate() + index);
+    headerDays.forEach((el, index) => {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + index);
 
-    const dayName = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"][index];
+      const dayName = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"][index];
 
-    el.innerHTML = `${dayName}<br><span>${date.toLocaleDateString("fr-FR", options)}</span>`;
+      el.innerHTML = `${dayName}<br><span>${date.toLocaleDateString("fr-FR", options)}</span>`;
+    });
+
+    // Label semaine (ex: 15 avr - 21 avr)
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    weekLabel.textContent =
+      `${monday.toLocaleDateString("fr-FR", options)} - ${sunday.toLocaleDateString("fr-FR", options)}`;
+  }
+
+  // Navigation
+  document.getElementById("prev").addEventListener("click", () => {
+    currentDate.setDate(currentDate.getDate() - 7);
+    updateCalendar();
   });
 
-  // ====== GRID HEURES ======
+  document.getElementById("next").addEventListener("click", () => {
+    currentDate.setDate(currentDate.getDate() + 7);
+    updateCalendar();
+  });
+
+  // GRID HEURES
   const grid = document.querySelector(".grid");
 
   for (let hour = 0; hour < 24; hour++) {
@@ -64,11 +92,13 @@
     }
   }
 
-  // ====== AUTO SCROLL ======
+  // Auto scroll
   window.addEventListener("load", () => {
     const hourHeight = 60;
     grid.scrollTop = hourHeight * 8;
   });
+
+  updateCalendar();
 </script>
 
 </body>
