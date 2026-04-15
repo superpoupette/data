@@ -22,10 +22,11 @@
     <button id="refresh">↻ Refresh</button>
   </div>
 
-  <!-- HEADER -->
+  <!-- HEADER (⚠️ colonne vide HEURE obligatoire) -->
   <div class="header">
+    <div class="hour-header"></div>
     <div></div><div></div><div></div><div></div>
-    <div></div><div></div><div></div><div></div>
+    <div></div><div></div><div></div>
   </div>
 
   <!-- GRID -->
@@ -98,12 +99,20 @@ function updateCalendar() {
   const options = { day: "numeric", month: "short" };
   const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
+  // HEADER avec colonne HEURE + 7 jours
   const headerDays = document.querySelectorAll(".header div");
 
   headerDays.forEach((el, i) => {
+
+    if (i === 0) {
+      el.innerHTML = "";
+      return;
+    }
+
     const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    el.innerHTML = `${names[i]}<br><span>${d.toLocaleDateString("fr-FR", options)}</span>`;
+    d.setDate(monday.getDate() + (i - 1));
+
+    el.innerHTML = `${names[i - 1]}<br><span>${d.toLocaleDateString("fr-FR", options)}</span>`;
   });
 
   const sunday = new Date(monday);
@@ -112,7 +121,7 @@ function updateCalendar() {
   weekLabel.textContent =
     `${monday.toLocaleDateString("fr-FR", options)} - ${sunday.toLocaleDateString("fr-FR", options)}`;
 
-  // GRID
+  // GRID (colonne 1 = heures)
   for (let h = 0; h < 24; h++) {
 
     const hourCell = document.createElement("div");
@@ -143,8 +152,8 @@ function loadEvents() {
 
   eventsData.forEach(ev => {
 
-    let start = new Date(ev.start);
-    let end = new Date(ev.end);
+    const start = new Date(ev.start);
+    const end = new Date(ev.end);
 
     const diffDays = Math.floor(
       (start - mondayGlobal) / (1000 * 60 * 60 * 24)
@@ -204,7 +213,7 @@ document.getElementById("refresh").onclick = () => {
 };
 
 /* =========================
-   SAVE EVENT (AUTO END DATE)
+   SAVE EVENT (AUTO END)
 ========================= */
 document.getElementById("saveEvent").onclick = () => {
 
@@ -223,22 +232,18 @@ document.getElementById("saveEvent").onclick = () => {
     return;
   }
 
-  // 🟢 START
+  // START
   const start = new Date(startDate);
   start.setHours(Math.floor(startHour));
   start.setMinutes((startHour % 1) * 60);
-  start.setSeconds(0);
-  start.setMilliseconds(0);
 
-  // 🟡 AUTO END = START si vide
+  // AUTO END
   if (!endDate) endDate = startDate;
-  if (isNaN(endHour)) endHour = startHour + 1; // défaut 1h
+  if (isNaN(endHour)) endHour = startHour + 1;
 
   const end = new Date(endDate);
   end.setHours(Math.floor(endHour));
   end.setMinutes((endHour % 1) * 60);
-  end.setSeconds(0);
-  end.setMilliseconds(0);
 
   const newEvent = {
     id: crypto.randomUUID(),
