@@ -124,23 +124,69 @@ body {
 
 .modal-content {
   background: #1e1e1e;
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
+  padding: 18px;
+  border-radius: 14px;
+  width: 320px;
   display: flex;
   flex-direction: column;
+  gap: 14px;
+}
+
+/* labels */
+.modal-content label {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 4px;
+}
+
+/* inputs génériques */
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #2a2a2a;   /* gris + clair que fond */
+  color: #e0e0e0;
+  outline: none;
+}
+
+/* focus style */
+.modal-content input:focus,
+.modal-content select:focus {
+  border-color: #555;
+}
+
+/* lignes groupées */
+.row {
+  display: flex;
   gap: 10px;
 }
 
-.modal-content input,
-.modal-content select {
-  padding: 6px;
-}
-
+/* boutons */
 .modal-actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
+  margin-top: 6px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+#closeModal {
+  background: #333;
+  color: white;
+  margin-right: 8px;
+}
+
+#saveEvent {
+  background: #5c6bc0;
+  color: white;
 }
 .event {
   position: absolute;
