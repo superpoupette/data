@@ -18,23 +18,14 @@
 
     <button id="next">→</button>
 
-    <!-- bouton créer -->
     <button id="openModal">+ Créer</button>
-
-    <!-- bouton refresh -->
     <button id="refresh">↻ Refresh</button>
   </div>
 
   <!-- HEADER -->
   <div class="header">
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
+    <div></div><div></div><div></div><div></div>
+    <div></div><div></div><div></div><div></div>
   </div>
 
   <!-- GRID -->
@@ -54,8 +45,8 @@
     <label>Date</label>
     <input id="eventDate" type="date">
 
-    <label>Heure (ex: 14.5)</label>
-    <input id="eventHour" type="number" step="0.5">
+    <label>Heure</label>
+    <input id="eventHour" type="number" step="0.25">
 
     <label>Durée (minutes)</label>
     <input id="eventDuration" type="number">
@@ -79,7 +70,6 @@
 let currentDate = new Date();
 let eventsData = JSON.parse(localStorage.getItem("events") || "[]");
 
-const headerDays = document.querySelectorAll(".header div:not(:first-child)");
 const grid = document.querySelector(".grid");
 const weekLabel = document.getElementById("weekLabel");
 const modal = document.getElementById("modal");
@@ -98,15 +88,17 @@ function updateCalendar() {
 
   const monday = new Date(currentDate);
   monday.setDate(currentDate.getDate() + diff);
+  monday.setHours(0,0,0,0);
   mondayGlobal = monday;
 
   const options = { day: "numeric", month: "short" };
   const names = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 
+  const headerDays = document.querySelectorAll(".header div:not(:first-child)");
+
   headerDays.forEach((el, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
-
     el.innerHTML = `${names[i]}<br><span>${d.toLocaleDateString("fr-FR", options)}</span>`;
   });
 
@@ -127,6 +119,8 @@ function updateCalendar() {
     for (let d = 0; d < 7; d++) {
       const cell = document.createElement("div");
       cell.className = "cell";
+      cell.dataset.hour = h;
+      cell.dataset.day = d;
       grid.appendChild(cell);
     }
   }
@@ -135,34 +129,30 @@ function updateCalendar() {
     grid.scrollTop = 32 * 12;
   });
 
-  loadEvents(monday);
+  loadEvents();
 }
 
 /* =========================
-   LOAD EVENTS (FIX DATE BUG)
+   LOAD EVENTS (TIMESTAMP VERSION)
 ========================= */
-async function loadEvents(monday) {
+function loadEvents() {
 
-  const res = await fetch("data.json");
-  const fileEvents = await res.json();
+  const events = eventsData;
 
-  const events = [...fileEvents, ...eventsData];
+  const pxPerMinute = 32 / 60;
 
   events.forEach(ev => {
 
-    const eventDate = new Date(ev.date + "T00:00:00");
+    const start = new Date(ev.start);
 
-    const mondayLocal = new Date(monday);
-    mondayLocal.setHours(0,0,0,0);
-
-    const diffDays = Math.round(
-      (eventDate.getTime() - mondayLocal.getTime()) / (1000 * 60 * 60 * 24)
+    const diffDays = Math.floor(
+      (start - mondayGlobal) / (1000 * 60 * 60 * 24)
     );
 
     if (diffDays < 0 || diffDays > 6) return;
 
-    const hour = Math.floor(ev.heure);
-    const minutes = (ev.heure % 1) * 60;
+    const hour = start.getHours();
+    const minutes = start.getMinutes();
 
     const cellIndex = hour * 8 + (diffDays + 1);
     const cell = grid.children[cellIndex];
@@ -172,8 +162,8 @@ async function loadEvents(monday) {
     const div = document.createElement("div");
     div.className = `event ${ev.type}`;
 
-    div.style.top = (minutes / 60 * 32) + "px";
-    div.style.height = (ev.duree / 60 * 32) + "px";
+    div.style.top = (minutes * pxPerMinute) + "px";
+    div.style.height = ((ev.end - ev.start) / 60000) * pxPerMinute + "px";
 
     div.textContent = ev.nom;
 
@@ -195,7 +185,7 @@ document.getElementById("next").onclick = () => {
 };
 
 /* =========================
-   MODAL OPEN/CLOSE
+   MODAL
 ========================= */
 document.getElementById("openModal").onclick = () => {
   modal.classList.remove("hidden");
@@ -206,25 +196,37 @@ document.getElementById("closeModal").onclick = () => {
 };
 
 /* =========================
-   REFRESH BUTTON
+   REFRESH
 ========================= */
 document.getElementById("refresh").onclick = () => {
-  localStorage.removeItem("events");
-  eventsData = [];
   updateCalendar();
 };
 
 /* =========================
-   SAVE EVENT
+   SAVE EVENT (TIMESTAMP)
 ========================= */
 document.getElementById("saveEvent").onclick = () => {
 
+  const name = document.getElementById("eventName").value;
+  const date = document.getElementById("eventDate").value;
+  const hour = parseFloat(document.getElementById("eventHour").value);
+  const duration = parseInt(document.getElementById("eventDuration").value);
+  const type = document.getElementById("eventType").value;
+
+  const start = new Date(date);
+  start.setHours(Math.floor(hour));
+  start.setMinutes((hour % 1) * 60);
+  start.setSeconds(0);
+  start.setMilliseconds(0);
+
+  const end = new Date(start.getTime() + duration * 60000);
+
   const newEvent = {
-    nom: document.getElementById("eventName").value,
-    date: document.getElementById("eventDate").value + "T00:00:00",
-    heure: parseFloat(document.getElementById("eventHour").value),
-    duree: parseInt(document.getElementById("eventDuration").value),
-    type: document.getElementById("eventType").value
+    id: crypto.randomUUID(),
+    nom: name,
+    start: start.getTime(),
+    end: end.getTime(),
+    type
   };
 
   eventsData.push(newEvent);
